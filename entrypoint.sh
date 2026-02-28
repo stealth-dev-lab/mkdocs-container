@@ -12,7 +12,15 @@ if [ -n "$MKDOCS_DEPTH" ] && [ -d "$SOURCE_DIR" ]; then
     rm -rf "$DOCS_DIR"/*
 
     # Find markdown files within depth limit and create symlinks
-    find "$SOURCE_DIR" -maxdepth "$MKDOCS_DEPTH" -name "*.md" -type f | while read file; do
+    skipped=0
+    find "$SOURCE_DIR" -maxdepth "$MKDOCS_DEPTH" -name "*.md" -type f | while read -r file; do
+        # Skip non-UTF-8 files (use Python since Alpine's iconv doesn't detect encoding errors)
+        if ! python3 -c "open('$file', 'r', encoding='utf-8').read()" 2>/dev/null; then
+            echo "Skipping non-UTF-8 file: ${file#$SOURCE_DIR/}"
+            skipped=$((skipped + 1))
+            continue
+        fi
+
         # Get relative path from source
         rel_path="${file#$SOURCE_DIR/}"
         dir_path=$(dirname "$rel_path")
