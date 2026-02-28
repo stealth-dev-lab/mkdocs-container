@@ -22,10 +22,12 @@ theme:
   features:
     - navigation.instant
     - navigation.tracking
-    - navigation.expand
     - toc.follow
     - search.suggest
     - search.highlight
+
+extra_css:
+  - stylesheets/extra.css
 
 plugins:
   - search

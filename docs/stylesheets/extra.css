@@ -1,0 +1,8 @@
+/* Widen the content area */
+.md-grid {
+  max-width: 1440px;
+}
+
+.md-content {
+  max-width: none;
+}
