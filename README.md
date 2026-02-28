@@ -1,83 +1,110 @@
-# MkDocs Container
+# mdvault
 
-MkDocs Material container with custom hooks for documentation hosting.
+Markdown documentation server with MkDocs Material. Instantly browse your markdown files with a beautiful interface.
+
+## Installation
+
+### One-Line Install
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/stealth-dev-lab/mdvault/main/install.sh | sh
+```
+
+This will:
+1. Detect your container engine (Docker or Podman)
+2. Guide you through configuration
+3. Start mdvault automatically
+
+### Management Commands
+
+```bash
+# Update to latest version
+curl -fsSL https://raw.githubusercontent.com/stealth-dev-lab/mdvault/main/install.sh | sh -s -- --update
+
+# Check status
+curl -fsSL https://raw.githubusercontent.com/stealth-dev-lab/mdvault/main/install.sh | sh -s -- --status
+
+# Uninstall
+curl -fsSL https://raw.githubusercontent.com/stealth-dev-lab/mdvault/main/install.sh | sh -s -- --uninstall
+```
 
 ## Features
 
 - Filename as navigation title (instead of H1 heading)
 - Mermaid diagram rendering
 - Hot reload (file create/update/delete)
-- No Nix dependency
+- Auto-update support (Podman Quadlet with `AutoUpdate=registry`)
 
-## Quick Start
+## Configuration
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `MDVAULT_SOURCE` | `~/work` | Directory to serve |
+| `MDVAULT_PORT` | `3000` | Host port |
+| `MDVAULT_DEPTH` | `3` | Directory depth limit |
+
+## Manual Installation
+
+### Docker Compose
+
+```bash
+# Clone and configure
+git clone https://github.com/stealth-dev-lab/mdvault.git
+cd mdvault
+cp .env.example .env
+# Edit .env with your settings
+
+# Start
+docker compose up -d
+```
+
+### Podman (Manual)
+
+```bash
+podman run -d --name mdvault \
+  -p 3000:8000 \
+  -v ~/work:/source:ro,Z \
+  -e MKDOCS_DEPTH=3 \
+  ghcr.io/stealth-dev-lab/mdvault:latest \
+  serve --dev-addr=0.0.0.0:8000 --livereload
+```
+
+### Build from Source
 
 ```bash
 # Build
-podman build -t mkdocs-custom .
+podman build -t mdvault .
 
-# Run (mount the directory you want to browse)
-podman run -d --name mkdocs \
-  --network "pasta:--ipv4-only" \
+# Run
+podman run -d --name mdvault \
   -p 3000:8000 \
-  -v ~/work:/docs/docs:Z \
-  mkdocs-custom serve --dev-addr=0.0.0.0:8000 --livereload
-```
-
-Access at `http://localhost:3000/`
-
-## Usage
-
-### Mount Structure
-
-MkDocs reads markdown files from `/docs/docs` inside the container. Mount your target directory there:
-
-```bash
--v /path/to/your/markdown:/docs/docs:Z
-```
-
-### Examples
-
-```bash
-# Browse ~/work directory
--v ~/work:/docs/docs:Z
-
-# Browse a specific project
--v ~/projects/my-app:/docs/docs:Z
-```
-
-### Depth Filtering
-
-For large directories, use `MKDOCS_DEPTH` to limit scanning depth. Mount to `/source` instead of `/docs/docs`:
-
-```bash
-# Only show files up to 3 levels deep
-podman run --rm --name mkdocs \
-  --network "pasta:--ipv4-only" \
-  -p 3000:8000 \
+  -v ~/work:/source:ro,Z \
   -e MKDOCS_DEPTH=3 \
-  -v ~/work:/source:Z \
-  mkdocs-custom serve --dev-addr=0.0.0.0:8000 --livereload
+  mdvault serve --dev-addr=0.0.0.0:8000 --livereload
 ```
 
-This creates symlinks only for files within the depth limit, making startup fast even for large directories.
+## How It Works
 
-### Options
+mdvault mounts your source directory read-only and serves it through MkDocs Material. The `MKDOCS_DEPTH` option limits directory scanning depth for better performance with large codebases.
 
-| Option | Description |
-|--------|-------------|
-| `-e MKDOCS_DEPTH=N` | Limit to N levels deep (optional) |
-| `--network "pasta:--ipv4-only"` | Required for rootless podman with Nix-installed pasta (avoids IPv6 connection issues) |
-| `-p 3000:8000` | Map container port 8000 to host port 3000 |
-| `--livereload` | Required for hot reload to work |
+### Mount Points
+
+| Path | Description |
+|------|-------------|
+| `/source` | Your markdown files (with depth filtering) |
+| `/docs/docs` | Direct mount (no depth filtering) |
 
 ## Files
 
 | File | Description |
 |------|-------------|
+| `install.sh` | One-line installer script |
+| `docker-compose.yml` | Docker Compose configuration |
+| `quadlet/mdvault.container` | Podman Quadlet template |
 | `Containerfile` | Container image definition |
 | `mkdocs.yml` | MkDocs configuration |
-| `hooks/filename_title.py` | Hook to use filename as nav title |
+| `hooks/` | MkDocs hooks (filename_title, depth_filter) |
 
-## Documentation
+## License
 
-See [docs/mkdocs_container_setup.md](../docs/mkdocs_container_setup.md) for detailed setup instructions.
+MIT

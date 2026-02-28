@@ -1,0 +1,12 @@
+services:
+  mdvault:
+    image: ghcr.io/stealth-dev-lab/mdvault:latest
+    container_name: mdvault
+    restart: unless-stopped
+    ports:
+      - "${MDVAULT_PORT:-3000}:8000"
+    volumes:
+      - "${MDVAULT_SOURCE:-~/work}:/source:ro"
+    environment:
+      - MKDOCS_DEPTH=${MDVAULT_DEPTH:-3}
+    command: serve --dev-addr=0.0.0.0:8000 --livereload

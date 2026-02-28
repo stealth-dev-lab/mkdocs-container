@@ -1,0 +1,18 @@
+[Unit]
+Description=mdvault - Markdown Documentation Server
+After=network-online.target
+
+[Container]
+Image=ghcr.io/stealth-dev-lab/mdvault:latest
+PublishPort=${MDVAULT_PORT}:8000
+Volume=${MDVAULT_SOURCE}:/source:ro,Z
+Environment=MKDOCS_DEPTH=${MDVAULT_DEPTH}
+Exec=serve --dev-addr=0.0.0.0:8000 --livereload
+AutoUpdate=registry
+
+[Service]
+Restart=on-failure
+TimeoutStartSec=300
+
+[Install]
+WantedBy=default.target
